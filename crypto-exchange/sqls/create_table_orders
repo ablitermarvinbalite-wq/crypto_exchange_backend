@@ -1,0 +1,16 @@
+CREATE TABLE orders (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+
+    user_id BIGINT NOT NULL,
+    symbol VARCHAR(20) NOT NULL,
+
+    side VARCHAR(10) NOT NULL,   -- BUY / SELL
+
+    price DECIMAL(19,8) NOT NULL,
+    quantity DECIMAL(19,8) NOT NULL,
+    remaining_quantity DECIMAL(19,8) NOT NULL,
+
+    status VARCHAR(20) NOT NULL, -- OPEN, PARTIAL, FILLED
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

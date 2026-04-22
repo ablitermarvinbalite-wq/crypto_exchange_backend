@@ -1,0 +1,2 @@
+ALTER TABLE wallets
+    ADD COLUMN locked_balance DECIMAL(19,8) NOT NULL DEFAULT 0;

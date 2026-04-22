@@ -25,4 +25,7 @@ public class Wallet {
 
     @Column(nullable = false, precision = 19, scale = 8)
     private BigDecimal balance = BigDecimal.ZERO;
+
+    @Column(nullable = false, precision = 19, scale = 8)
+    private BigDecimal lockedBalance = BigDecimal.ZERO;
 }

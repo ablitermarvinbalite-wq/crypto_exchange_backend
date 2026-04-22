@@ -80,4 +80,21 @@ public class WalletService {
                 .balance(wallet.getBalance())
                 .build();
     }
+
+    @Transactional
+    public void lockBalance(Long userId, String asset, BigDecimal amount) {
+
+        Wallet wallet = walletRepository
+                .findByUserIdAndAsset(userId, asset)
+                .orElseThrow(() -> new RuntimeException("Wallet not found"));
+
+        if (wallet.getBalance().compareTo(amount) < 0) {
+            throw new RuntimeException("Insufficient balance");
+        }
+
+        wallet.setBalance(wallet.getBalance().subtract(amount));
+        wallet.setLockedBalance(wallet.getLockedBalance().add(amount));
+
+        walletRepository.save(wallet);
+    }
 }
