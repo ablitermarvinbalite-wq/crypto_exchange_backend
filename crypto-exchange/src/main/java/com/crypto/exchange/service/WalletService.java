@@ -97,4 +97,22 @@ public class WalletService {
 
         walletRepository.save(wallet);
     }
+
+    @Transactional
+    public void unlockBalance(Long userId, String asset, BigDecimal amount) {
+
+        Wallet wallet = walletRepository
+                .findByUserIdAndAsset(userId, asset)
+                .orElseThrow(() -> new RuntimeException("Wallet not found"));
+
+        if (wallet.getLockedBalance().compareTo(amount) < 0) {
+            throw new RuntimeException("Invalid unlock amount");
+        }
+
+        wallet.setLockedBalance(wallet.getLockedBalance().subtract(amount));
+        wallet.setBalance(wallet.getBalance().add(amount));
+
+        walletRepository.save(wallet);
+    }
+
 }
