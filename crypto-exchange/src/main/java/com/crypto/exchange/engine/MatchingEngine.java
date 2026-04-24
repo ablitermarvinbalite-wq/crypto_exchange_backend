@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Component
 @RequiredArgsConstructor
@@ -17,15 +18,24 @@ public class MatchingEngine {
     private final Map<String, OrderBook> orderBooks = new ConcurrentHashMap<>();
     private final TradeService tradeService;
     private final OrderRepository orderRepository;
+    private final Map<String, ReentrantLock> locks = new ConcurrentHashMap<>();
 
     public void process(Order order) {
 
-        OrderBook orderBook = getOrderBook(order.getSymbol());
+        ReentrantLock lock = getLock(order.getSymbol());
 
-        if ("BUY".equalsIgnoreCase(order.getSide())) {
-            matchBuy(order, orderBook);
-        } else {
-            matchSell(order, orderBook);
+        lock.lock();
+        try {
+            OrderBook orderBook = getOrderBook(order.getSymbol());
+
+            if ("BUY".equalsIgnoreCase(order.getSide())) {
+                matchBuy(order, orderBook);
+            } else {
+                matchSell(order, orderBook);
+            }
+
+        } finally {
+            lock.unlock();
         }
     }
 
@@ -103,5 +113,9 @@ public class MatchingEngine {
 
     public OrderBook getOrderBook(String symbol) {
         return orderBooks.computeIfAbsent(symbol, s -> new OrderBook());
+    }
+
+    private ReentrantLock getLock(String symbol) {
+        return locks.computeIfAbsent(symbol, s -> new ReentrantLock());
     }
 }

@@ -7,6 +7,7 @@ import com.crypto.exchange.entity.Order;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,11 +23,15 @@ public class OrderBookService {
 
         List<OrderBookResponse.Level> bids =
                 orderBook.getBuyOrders().stream()
+                        .sorted(Comparator.comparing(Order::getPrice).reversed())
+                        .limit(20)
                         .map(this::map)
                         .collect(Collectors.toList());
 
         List<OrderBookResponse.Level> asks =
                 orderBook.getSellOrders().stream()
+                        .sorted(Comparator.comparing(Order::getPrice))
+                        .limit(20)
                         .map(this::map)
                         .collect(Collectors.toList());
 

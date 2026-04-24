@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "orders")
@@ -26,4 +27,6 @@ public class Order {
     private BigDecimal remainingQuantity;
 
     private String status;
+
+    private LocalDateTime createdAt;
 }

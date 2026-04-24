@@ -81,12 +81,8 @@ public class OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
 
-        if ("FILLED".equals(order.getStatus())) {
-            throw new RuntimeException("Cannot cancel filled order");
-        }
-
-        if ("CANCELLED".equals(order.getStatus())) {
-            throw new RuntimeException("Order already cancelled");
+        if (!"OPEN".equals(order.getStatus()) && !"PARTIAL".equals(order.getStatus())) {
+            throw new RuntimeException("Cannot cancel");
         }
 
         BigDecimal remaining = order.getRemainingQuantity();
@@ -95,7 +91,7 @@ public class OrderService {
         String base = parts[0];
         String quote = parts[1];
 
-        // 🔓 UNLOCK FUNDS
+        // UNLOCK FUNDS
         if ("BUY".equalsIgnoreCase(order.getSide())) {
 
             BigDecimal refund = order.getPrice().multiply(remaining);

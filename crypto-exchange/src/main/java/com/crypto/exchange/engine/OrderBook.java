@@ -11,10 +11,10 @@ public class OrderBook {
 
     // Highest BUY first
     private final PriorityQueue<Order> buyOrders =
-            new PriorityQueue<>(Comparator.comparing(Order::getPrice).reversed());
+            new PriorityQueue<>(Comparator.comparing(Order::getPrice).thenComparing(Order::getCreatedAt).reversed());
 
     // Lowest SELL first
     private final PriorityQueue<Order> sellOrders =
-            new PriorityQueue<>(Comparator.comparing(Order::getPrice));
+            new PriorityQueue<>(Comparator.comparing(Order::getPrice).thenComparing(Order::getCreatedAt));
 
 }
