@@ -1,6 +1,7 @@
 package com.crypto.exchange.service;
 
 import com.crypto.exchange.dto.OrderRequest;
+import com.crypto.exchange.dto.OrderResponse;
 import com.crypto.exchange.engine.MatchingEngine;
 import com.crypto.exchange.entity.Order;
 import com.crypto.exchange.repository.OrderRepository;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -112,5 +114,25 @@ public class OrderService {
         order.setStatus("CANCELLED");
 
         orderRepository.save(order);
+    }
+
+    public List<OrderResponse> getUserOrders(Long userId) {
+
+        return orderRepository.findByUserIdOrderByIdDesc(userId)
+                .stream()
+                .map(this::map)
+                .toList();
+    }
+
+    private OrderResponse map(Order order) {
+        return OrderResponse.builder()
+                .orderId(order.getId())
+                .symbol(order.getSymbol())
+                .side(order.getSide())
+                .price(order.getPrice())
+                .quantity(order.getQuantity())
+                .remainingQuantity(order.getRemainingQuantity())
+                .status(order.getStatus())
+                .build();
     }
 }

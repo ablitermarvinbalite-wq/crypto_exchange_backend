@@ -1,6 +1,7 @@
 package com.crypto.exchange.engine;
 
 import com.crypto.exchange.entity.Order;
+import com.crypto.exchange.repository.OrderRepository;
 import com.crypto.exchange.service.TradeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -15,6 +16,7 @@ public class MatchingEngine {
 
     private final Map<String, OrderBook> orderBooks = new ConcurrentHashMap<>();
     private final TradeService tradeService;
+    private final OrderRepository orderRepository;
 
     public void process(Order order) {
 
@@ -78,24 +80,25 @@ public class MatchingEngine {
 
         BigDecimal tradePrice = sell.getPrice();
 
+        // Handles:
+        // - trade persistence
+        // - wallet updates
         tradeService.executeTrade(buy, sell, tradeQty, tradePrice);
 
         buy.setRemainingQuantity(buy.getRemainingQuantity().subtract(tradeQty));
         sell.setRemainingQuantity(sell.getRemainingQuantity().subtract(tradeQty));
 
-        if (buy.getRemainingQuantity().compareTo(BigDecimal.ZERO) == 0) {
-            buy.setStatus("FILLED");
-        } else {
-            buy.setStatus("PARTIAL");
-        }
+        buy.setStatus(
+                buy.getRemainingQuantity().compareTo(BigDecimal.ZERO) == 0 ? "FILLED" : "PARTIAL"
+        );
 
-        if (sell.getRemainingQuantity().compareTo(BigDecimal.ZERO) == 0) {
-            sell.setStatus("FILLED");
-        } else {
-            sell.setStatus("PARTIAL");
-        }
+        sell.setStatus(
+                sell.getRemainingQuantity().compareTo(BigDecimal.ZERO) == 0 ? "FILLED" : "PARTIAL"
+        );
 
-        // 🔥 NEXT: wallet updates (we'll add below)
+        orderRepository.save(buy);
+        orderRepository.save(sell);
+
     }
 
     public OrderBook getOrderBook(String symbol) {
