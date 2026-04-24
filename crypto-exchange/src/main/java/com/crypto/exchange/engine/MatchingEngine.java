@@ -80,14 +80,14 @@ public class MatchingEngine {
 
         BigDecimal tradePrice = sell.getPrice();
 
-        // Handles:
-        // - trade persistence
-        // - wallet updates
-        tradeService.executeTrade(buy, sell, tradeQty, tradePrice);
-
+        // 1. update remaining first
         buy.setRemainingQuantity(buy.getRemainingQuantity().subtract(tradeQty));
         sell.setRemainingQuantity(sell.getRemainingQuantity().subtract(tradeQty));
 
+        // 2. execute trade
+        tradeService.executeTrade(buy, sell, tradeQty, tradePrice);
+
+        // 3. update status
         buy.setStatus(
                 buy.getRemainingQuantity().compareTo(BigDecimal.ZERO) == 0 ? "FILLED" : "PARTIAL"
         );
@@ -96,9 +96,9 @@ public class MatchingEngine {
                 sell.getRemainingQuantity().compareTo(BigDecimal.ZERO) == 0 ? "FILLED" : "PARTIAL"
         );
 
+        // 4. persist
         orderRepository.save(buy);
         orderRepository.save(sell);
-
     }
 
     public OrderBook getOrderBook(String symbol) {

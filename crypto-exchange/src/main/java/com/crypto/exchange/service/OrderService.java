@@ -20,15 +20,18 @@ public class OrderService {
     private final WalletService walletService;
     private final MatchingEngine matchingEngine;
 
+    private static final List<String> QUOTES = List.of("USDT", "USDC", "BTC");
+
     @Transactional
     public Order placeOrder(OrderRequest request) {
 
         validate(request);
 
-        String base = "BTC";
-        String quote = "USDT";
+        String[] parts = parseSymbol(request.getSymbol());
+        String base = parts[0];
+        String quote = parts[1];
 
-        // 🔒 LOCK FUNDS
+        // LOCK FUNDS
         if ("BUY".equalsIgnoreCase(request.getSide())) {
 
             BigDecimal total = request.getPrice()
@@ -45,7 +48,7 @@ public class OrderService {
             );
         }
 
-        // 📊 CREATE ORDER
+        // CREATE ORDER
         Order order = new Order();
         order.setUserId(request.getUserId());
         order.setSymbol(request.getSymbol());
@@ -88,8 +91,9 @@ public class OrderService {
 
         BigDecimal remaining = order.getRemainingQuantity();
 
-        String base = "BTC";
-        String quote = "USDT";
+        String[] parts = parseSymbol(order.getSymbol());
+        String base = parts[0];
+        String quote = parts[1];
 
         // 🔓 UNLOCK FUNDS
         if ("BUY".equalsIgnoreCase(order.getSide())) {
@@ -134,5 +138,17 @@ public class OrderService {
                 .remainingQuantity(order.getRemainingQuantity())
                 .status(order.getStatus())
                 .build();
+    }
+
+    private String[] parseSymbol(String symbol) {
+
+        for (String quote : QUOTES) {
+            if (symbol.endsWith(quote)) {
+                String base = symbol.substring(0, symbol.length() - quote.length());
+                return new String[]{base, quote};
+            }
+        }
+
+        throw new RuntimeException("Invalid symbol: " + symbol);
     }
 }
