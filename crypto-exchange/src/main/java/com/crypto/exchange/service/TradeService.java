@@ -1,5 +1,6 @@
 package com.crypto.exchange.service;
 
+import com.crypto.exchange.dto.TradeResponse;
 import com.crypto.exchange.entity.Order;
 import com.crypto.exchange.entity.Wallet;
 import com.crypto.exchange.entity.Trade;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -93,5 +95,51 @@ public class TradeService {
         }
 
         walletRepository.save(wallet);
+    }
+
+    public List<TradeResponse> getUserTrades(Long userId) {
+
+        return tradeRepository
+                .findByBuyerIdOrSellerIdOrderByIdDesc(userId, userId)
+                .stream()
+                .map(trade -> mapUserTrade(trade, userId))
+                .toList();
+    }
+
+    private TradeResponse mapUserTrade(Trade trade, Long userId) {
+
+        boolean isBuyer = trade.getBuyerId().equals(userId);
+
+        return TradeResponse.builder()
+                .tradeId(trade.getId())
+                .symbol(trade.getSymbol())
+                .price(trade.getPrice())
+                .quantity(trade.getQuantity())
+                .total(trade.getTotal())
+                .side(isBuyer ? "BUY" : "SELL")
+                .counterpartyId(isBuyer ? trade.getSellerId() : trade.getBuyerId())
+                .build();
+    }
+
+    public List<TradeResponse> getMarketTrades(String symbol) {
+
+        return tradeRepository
+                .findBySymbolOrderByIdDesc(symbol)
+                .stream()
+                .map(this::mapMarketTrade)
+                .toList();
+    }
+
+    private TradeResponse mapMarketTrade(Trade trade) {
+
+        return TradeResponse.builder()
+                .tradeId(trade.getId())
+                .symbol(trade.getSymbol())
+                .price(trade.getPrice())
+                .quantity(trade.getQuantity())
+                .total(trade.getTotal())
+                .side("MARKET")
+                .counterpartyId(null)
+                .build();
     }
 }
