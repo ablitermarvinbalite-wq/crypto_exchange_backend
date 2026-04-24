@@ -6,24 +6,28 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 @RequiredArgsConstructor
 public class MatchingEngine {
 
-    private final OrderBook orderBook = new OrderBook();
+    private final Map<String, OrderBook> orderBooks = new ConcurrentHashMap<>();
     private final TradeService tradeService;
 
-    public void process(Order newOrder) {
+    public void process(Order order) {
 
-        if ("BUY".equalsIgnoreCase(newOrder.getSide())) {
-            matchBuy(newOrder);
+        OrderBook orderBook = getOrderBook(order.getSymbol());
+
+        if ("BUY".equalsIgnoreCase(order.getSide())) {
+            matchBuy(order, orderBook);
         } else {
-            matchSell(newOrder);
+            matchSell(order, orderBook);
         }
     }
 
-    private void matchBuy(Order buy) {
+    private void matchBuy(Order buy, OrderBook orderBook) {
 
         while (!orderBook.getSellOrders().isEmpty()) {
 
@@ -45,7 +49,7 @@ public class MatchingEngine {
         orderBook.getBuyOrders().add(buy);
     }
 
-    private void matchSell(Order sell) {
+    private void matchSell(Order sell, OrderBook orderBook) {
 
         while (!orderBook.getBuyOrders().isEmpty()) {
 
@@ -92,5 +96,9 @@ public class MatchingEngine {
         }
 
         // 🔥 NEXT: wallet updates (we'll add below)
+    }
+
+    public OrderBook getOrderBook(String symbol) {
+        return orderBooks.computeIfAbsent(symbol, s -> new OrderBook());
     }
 }
